@@ -406,7 +406,7 @@ sub security_recommendations {
 
     print "+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+—+-+-+-+-+—+\n";
     #Table use memory engine Should be attentioned.
-    my @table_mem = `mysql $mysqllogin -Bse "SELECT CONCAT(TABLE_SCHEMA, '\.', TABLE_NAME) FROM information_schema.TABLES WHERE TABLE_SCHEMA NOT IN ('information_schema','mysql') AND ENGINE = 'memory';"`;
+    my @table_mem = `mysql $mysqllogin -Bse "SELECT CONCAT(TABLE_SCHEMA, '\.', TABLE_NAME) FROM information_schema.TABLES WHERE TABLE_SCHEMA NOT IN ('information_schema','mysql','performance_schema') AND ENGINE = 'memory';"`;
     if (@table_mem) {
          foreach my $info (sort @table_mem) {
             chomp($info);
@@ -518,7 +518,7 @@ sub check_storage_engines {
 	print "$engines\n";
 	if (mysql_version_ge(5)) {
 		# MySQL 5 servers can have table sizes calculated quickly from information schema
-		my @templist = `mysql $mysqllogin -Bse "SELECT ENGINE,SUM(DATA_LENGTH),COUNT(ENGINE) FROM information_schema.TABLES WHERE TABLE_SCHEMA NOT IN ('information_schema','mysql') AND ENGINE IS NOT NULL GROUP BY ENGINE ORDER BY ENGINE ASC;"`;
+		my @templist = `mysql $mysqllogin -Bse "SELECT ENGINE,SUM(DATA_LENGTH),COUNT(ENGINE) FROM information_schema.TABLES WHERE TABLE_SCHEMA NOT IN ('information_schema','mysql','performance_schema') AND ENGINE IS NOT NULL GROUP BY ENGINE ORDER BY ENGINE ASC;"`;
 		foreach my $line (@templist) {
 			my ($engine,$size,$count);
 			($engine,$size,$count) = $line =~ /([a-zA-Z_]*)\s+(\d+)\s+(\d+)/;
@@ -526,7 +526,7 @@ sub check_storage_engines {
 			$enginestats{$engine} = $size;
 			$enginecount{$engine} = $count;
 		}
-		$fragtables = `mysql $mysqllogin -Bse "SELECT COUNT(TABLE_NAME) FROM information_schema.TABLES WHERE TABLE_SCHEMA NOT IN ('information_schema','mysql') AND Data_free > 0 AND NOT ENGINE='MEMORY';"`;
+		$fragtables = `mysql $mysqllogin -Bse "SELECT COUNT(TABLE_NAME) FROM information_schema.TABLES WHERE TABLE_SCHEMA NOT IN ('information_schema','mysql','performance_schema') AND Data_free > 0 AND NOT ENGINE='MEMORY';"`;
 		chomp($fragtables);
 	} else {
 		# MySQL < 5 servers take a lot of work to get table sizes
@@ -584,7 +584,7 @@ sub check_storage_engines {
 	}
 
 
-	my @frag_table_info = `mysql $mysqllogin -Bse "SELECT CONCAT(TABLE_SCHEMA, '.', TABLE_NAME, ' : ', Data_free) FROM information_schema.TABLES WHERE TABLE_SCHEMA NOT IN ('information_schema','mysql') AND Data_free > 0 AND NOT ENGINE='MEMORY';"`;
+	my @frag_table_info = `mysql $mysqllogin -Bse "SELECT CONCAT(TABLE_SCHEMA, '.', TABLE_NAME, ' : ', Data_free) FROM information_schema.TABLES WHERE TABLE_SCHEMA NOT IN ('information_schema','mysql','performance') AND Data_free > 0 AND NOT ENGINE='MEMORY';"`;
     if(@frag_table_info) {
        foreach my $info (@frag_table_info) {
           chomp($info);
