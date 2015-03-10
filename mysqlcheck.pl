@@ -423,6 +423,13 @@ sub security_recommendations {
         goodprint "Expire logs days : $myvar{expire_logs_days}\n";
     }
 
+    # innodb metadata check.
+    if ($myvar{'have_innodb'} ne "NO" and $myvar{'innodb_stats_on_metadata'} eq 'ON') {
+        badprint "Metadata is enable, statistic sql statement can be slowly.";
+    } else {
+        goodprint "Metdata is disable. statistic sql statement run quickly.";
+    }
+
     # slave info check
     my $slave_status = `mysql $mysqllogin -Bse "show slave status\\G"`;
     get_replication_status($slave_status) if $slave_status =~ /slave/i;
